@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Lichess Enhanced Analysis",
+  "short_name": "LEA",
+  "version": "1.0",
+  "description": "Chess.com tarzı görsel analiz paneli — Lichess analiz ve çalışma sayfaları için.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://lichess.org/*"],
+      "js": ["content.js"],
+      "css": ["panel.css", "animations.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

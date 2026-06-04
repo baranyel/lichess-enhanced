@@ -1,0 +1,289 @@
+/* ═══════════════════════════════════════════════════════
+   Lichess Enhanced Analysis — Panel (chess.com redesign)
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --lea-bg:         #1a1a2e;
+  --lea-surface:    #16213e;
+  --lea-surface-2:  #0f3460;
+  --lea-accent:     #e94560;
+  --lea-text:       #eaeaea;
+  --lea-text-muted: #8892a4;
+  --lea-best:       #00d084;
+  --lea-excellent:  #00b4d8;
+  --lea-good:       #4895ef;
+  --lea-inaccuracy: #f4a261;
+  --lea-mistake:    #e07a5f;
+  --lea-blunder:    #e63946;
+  --lea-border:     rgba(255,255,255,0.07);
+}
+
+/* ─── Panel root ──────────────────────────────────────── */
+#lea-panel-root {
+  width: 100%;
+  height: 100%;
+  background: var(--lea-bg);
+  color: var(--lea-text);
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+#lea-panel-root::-webkit-scrollbar      { width: 3px; }
+#lea-panel-root::-webkit-scrollbar-track { background: transparent; }
+#lea-panel-root::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+body.dark #lea-panel-root, [data-theme="dark"] #lea-panel-root { background: #111827; }
+
+/* ─── Header ──────────────────────────────────────────── */
+.lea-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--lea-surface);
+  position: relative; flex-shrink: 0;
+}
+.lea-header::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lea-accent), transparent);
+  background-size: 200% 100%;
+  animation: lea-header-shimmer 4s linear infinite;
+}
+.lea-header-left  { display: flex; align-items: center; gap: 8px; }
+.lea-header-icon  { font-size: 17px; filter: drop-shadow(0 0 5px rgba(233,69,96,0.5)); }
+.lea-header-title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; letter-spacing:.5px; }
+.lea-header-controls { display: flex; gap: 2px; }
+
+.lea-btn {
+  background:none; border:none; color:var(--lea-text-muted); cursor:pointer;
+  width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+  border-radius:4px; font-size:12px;
+  transition: color .2s, background .2s;
+}
+.lea-btn:hover               { color:var(--lea-text); background:rgba(255,255,255,0.08); }
+#lea-close-btn:hover         { color:var(--lea-blunder); background:rgba(230,57,70,0.12); }
+
+/* ─── Opening ─────────────────────────────────────────── */
+.lea-opening {
+  display:flex; align-items:center; gap:7px;
+  padding:7px 14px;
+  background:rgba(15,52,96,.35);
+  border-bottom:1px solid var(--lea-border); flex-shrink:0;
+}
+.lea-opening.lea-hidden { display:none; }
+.lea-opening-svg  { width:12px; height:12px; flex-shrink:0; stroke:var(--lea-text-muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.lea-opening-name { font-size:11px; font-style:italic; color:var(--lea-text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ─── Eval card ───────────────────────────────────────── */
+.lea-eval-card {
+  padding: 10px 14px 10px;
+  background: var(--lea-surface);
+  border-bottom: 1px solid var(--lea-border);
+  flex-shrink: 0;
+}
+
+.lea-eval-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+}
+.lea-eval-score {
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:26px;
+  line-height:1; letter-spacing:-.5px; min-width:52px;
+}
+.lea-eval-bar-container {
+  flex:1; height:7px; background:#0a0a14; border-radius:4px; overflow:hidden;
+}
+.lea-eval-bar {
+  height:100%;
+  background: linear-gradient(90deg,#ccc,#fff);
+  border-radius:4px;
+  transition: width 600ms cubic-bezier(.4,0,.2,1);
+  min-width:3%; max-width:97%;
+}
+.lea-eval-labels {
+  display:flex; justify-content:space-between;
+  font-size:9px; color:var(--lea-text-muted); margin-top:3px;
+}
+.lea-eval-depth {
+  font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--lea-text-muted);
+  padding:2px 5px; background:rgba(255,255,255,0.05); border-radius:3px; white-space:nowrap;
+}
+
+/* Best-move strip */
+.lea-bestmove-strip {
+  display:flex; align-items:center; gap:7px;
+  padding:7px 9px;
+  background:rgba(15,52,96,.55);
+  border:1px solid rgba(233,69,96,.22);
+  border-radius:7px;
+  animation: lea-card-border-pulse 3s ease-in-out infinite;
+}
+.lea-bestmove-tag {
+  font-size:8px; font-weight:700; letter-spacing:1.5px;
+  color:var(--lea-text-muted); text-transform:uppercase; white-space:nowrap;
+}
+.lea-bestmove-san {
+  font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:500;
+  color:var(--lea-accent); white-space:nowrap;
+  animation: lea-pulse-glow 2.2s ease-in-out infinite;
+}
+.lea-bestmove-pv {
+  font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--lea-text-muted);
+  flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.lea-bestmove-cp {
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--lea-text-muted);
+  background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:3px; white-space:nowrap;
+}
+
+/* ─── Accuracy gauges (= side selector) ──────────────── */
+.lea-accuracy-section {
+  display:flex; gap:8px; padding:12px 14px;
+  border-bottom:1px solid var(--lea-border); flex-shrink:0;
+}
+
+.lea-gauge-card {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 4px 6px; border-radius:10px;
+  border:2px solid transparent; cursor:pointer;
+  transition: border-color .25s, background .25s, box-shadow .25s;
+}
+.lea-gauge-card:hover { background:rgba(255,255,255,0.03); }
+.lea-gauge-card.lea-gauge-active {
+  border-color:var(--lea-accent);
+  background:rgba(233,69,96,.06);
+  box-shadow:0 0 12px rgba(233,69,96,.12);
+}
+
+.lea-gauge-svg { display:block; overflow:visible; }
+
+.lea-gauge-pct-text {
+  font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700;
+  fill:#eaeaea; text-anchor:middle; dominant-baseline:middle;
+}
+.lea-gauge-sym-text {
+  font-size:14px; fill:rgba(234,234,234,0.4);
+  text-anchor:middle; dominant-baseline:middle;
+}
+.lea-gauge-name {
+  font-size:10px; font-weight:700; color:var(--lea-text-muted);
+  letter-spacing:.6px; text-transform:uppercase; margin-top:3px;
+}
+
+/* ─── Stats grid ──────────────────────────────────────── */
+.lea-stats-section { padding:8px 14px 10px; flex-shrink:0; }
+
+.lea-stats-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:5px;
+}
+
+.lea-stat-cell {
+  background:var(--lea-surface); border-radius:7px;
+  padding:8px 7px 6px; cursor:pointer;
+  position:relative; overflow:hidden;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+/* top color bar */
+.lea-stat-cell::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  border-radius:7px 7px 0 0;
+}
+.stat-best::before       { background:var(--lea-best); }
+.stat-excellent::before  { background:var(--lea-excellent); }
+.stat-good::before       { background:var(--lea-good); }
+.stat-inaccuracy::before { background:var(--lea-inaccuracy); }
+.stat-mistake::before    { background:var(--lea-mistake); }
+.stat-blunder::before    { background:var(--lea-blunder); }
+
+.lea-stat-cell:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.45); filter:brightness(1.12); }
+.lea-stat-cell:active { transform:translateY(0); }
+
+.lea-stat-top {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;
+}
+.lea-stat-icon { font-size:12px; line-height:1; user-select:none; }
+
+.lea-stat-number {
+  font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; line-height:1;
+}
+.stat-best       .lea-stat-number { color:var(--lea-best); }
+.stat-excellent  .lea-stat-number { color:var(--lea-excellent); }
+.stat-good       .lea-stat-number { color:var(--lea-good); }
+.stat-inaccuracy .lea-stat-number { color:var(--lea-inaccuracy); }
+.stat-mistake    .lea-stat-number { color:var(--lea-mistake); }
+.stat-blunder    .lea-stat-number { color:var(--lea-blunder); }
+
+.lea-stat-label {
+  font-size:8.5px; color:var(--lea-text-muted);
+  font-weight:600; text-transform:uppercase; letter-spacing:.5px;
+}
+
+/* ─── Move list ───────────────────────────────────────── */
+.lea-moves-section {
+  padding:6px 14px 10px;
+  border-top:1px solid var(--lea-border); flex-shrink:0;
+}
+.lea-moves-header {
+  font-size:9px; font-weight:700; letter-spacing:1.5px;
+  color:var(--lea-text-muted); text-transform:uppercase;
+  padding-top:4px; margin-bottom:6px;
+}
+
+.lea-moves-list {
+  max-height:260px; overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent;
+}
+.lea-moves-list::-webkit-scrollbar       { width:3px; }
+.lea-moves-list::-webkit-scrollbar-track  { background:transparent; }
+.lea-moves-list::-webkit-scrollbar-thumb  { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+.lea-move-row {
+  display:grid; grid-template-columns:22px 1fr 1fr;
+  gap:2px; margin-bottom:1px;
+}
+.lea-move-num {
+  font-size:10px; color:var(--lea-text-muted); opacity:.6;
+  display:flex; align-items:center; padding:0 2px;
+}
+.lea-move-cell {
+  display:flex; align-items:center; gap:4px;
+  padding:4px 5px; border-radius:4px; cursor:pointer; min-height:26px;
+  transition: transform .15s ease, box-shadow .15s ease, background .2s ease, color .2s ease;
+}
+.lea-move-cell:hover { transform:translateY(-1px); box-shadow:0 2px 6px rgba(0,0,0,.3); background:rgba(255,255,255,.06); }
+.lea-move-cell.lea-active { background:var(--lea-accent); }
+.lea-move-cell.lea-active .lea-move-name  { color:#fff; }
+.lea-move-cell.lea-active .lea-move-badge { opacity:.8; }
+
+.lea-move-name {
+  font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:var(--lea-text); flex:1; line-height:1;
+}
+
+/* Quality badge — round pill, right side of move */
+.lea-move-badge {
+  width:17px; height:17px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:700; flex-shrink:0; line-height:1;
+  user-select:none;
+}
+.badge-best       { background:var(--lea-best);                color:#041a0e; }
+.badge-excellent  { background:var(--lea-excellent);            color:#041218; }
+.badge-inaccuracy { background:var(--lea-inaccuracy);           color:#1c0e00; }
+.badge-mistake    { background:var(--lea-mistake);              color:#1c0800; }
+.badge-blunder    { background:var(--lea-blunder);              color:#fff; }
+
+/* ─── Footer ──────────────────────────────────────────── */
+.lea-footer {
+  padding:7px 14px; text-align:center;
+  border-top:1px solid var(--lea-border); flex-shrink:0;
+}
+.lea-footer-text { font-size:9px; color:var(--lea-text-muted); opacity:.4; }
+
+/* ─── Minimized ───────────────────────────────────────── */
+#lea-panel-root.lea-minimized .lea-collapsible { display:none !important; }
+
+.lea-moves-empty {
+  color:var(--lea-text-muted); font-size:12px;
+  padding:10px 4px; text-align:center; opacity:.6;
+}
